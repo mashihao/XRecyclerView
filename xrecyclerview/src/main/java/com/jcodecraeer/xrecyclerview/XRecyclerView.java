@@ -20,8 +20,8 @@ import java.util.List;
 public class XRecyclerView extends RecyclerView {
     private boolean isLoadingData = false;
     private boolean isNoMore = false;
-    private int mRefreshProgressStyle = ProgressStyle.SysProgress;
-    private int mLoadingMoreProgressStyle = ProgressStyle.SysProgress;
+//    private int mRefreshProgressStyle = ProgressStyle.SysProgress;
+//    private int mLoadingMoreProgressStyle = ProgressStyle.SysProgress;
     private ArrayList<View> mHeaderViews = new ArrayList<>();
     private WrapAdapter mWrapAdapter;
     private float mLastY = -1;
@@ -31,7 +31,7 @@ public class XRecyclerView extends RecyclerView {
     private CustomFooterViewCallBack footerViewCallBack;
     private LoadingListener mLoadingListener;
     // 下拉 监听
-    private ArrowRefreshHeader mRefreshHeader;
+    private BaseRefreshHeader mRefreshHeader;
 
     //默认下拉刷新和上拉加载是开启的
     private boolean pullRefreshEnabled = true;
@@ -70,14 +70,13 @@ public class XRecyclerView extends RecyclerView {
     private void init() {
         if (pullRefreshEnabled) {
             mRefreshHeader = new ArrowRefreshHeader(getContext());
-            mRefreshHeader.setProgressStyle(mRefreshProgressStyle);
         }
         LoadingMoreFooter footView = new LoadingMoreFooter(getContext());
-        footView.setProgressStyle(mLoadingMoreProgressStyle);
         mFootView = footView;
         mFootView.setVisibility(GONE);
     }
 
+    // 获取默认的 FootView
     public LoadingMoreFooter getDefaultFootView() {
         if (mFootView == null) {
             return null;
@@ -92,6 +91,8 @@ public class XRecyclerView extends RecyclerView {
         return mFootView;
     }
 
+
+    // 设置 FootView  文字 前提  FootView 是 LoadingMoreFooter
     public void setFootViewText(String loading, String noMore) {
         if (mFootView instanceof LoadingMoreFooter) {
             ((LoadingMoreFooter) mFootView).setLoadingHint(loading);
@@ -100,7 +101,7 @@ public class XRecyclerView extends RecyclerView {
     }
 
     /**
-     * 添加头  可以添加多个， 头是由RecycleView 来实现的，也就是说RecycleView嵌套RecycleView
+     * 添加头  可以添加多个， 头是由RecycleView 的 adapter 来实现的，也就是说对原有的 Adapter 进行改装
      *
      * @param view
      */
@@ -134,7 +135,6 @@ public class XRecyclerView extends RecyclerView {
         }
     }
 
-    @SuppressWarnings("all")
     public void setFootView(@NonNull final View view, @NonNull CustomFooterViewCallBack footerViewCallBack) {
         if (view == null || footerViewCallBack == null) {
             return;
@@ -143,6 +143,7 @@ public class XRecyclerView extends RecyclerView {
         this.footerViewCallBack = footerViewCallBack;
     }
 
+    // 加载更多  结束 执行后续操作
     public void loadMoreComplete() {
         isLoadingData = false;
         if (mFootView instanceof LoadingMoreFooter) {
@@ -154,9 +155,11 @@ public class XRecyclerView extends RecyclerView {
         }
     }
 
+    // 设置没有更多
     public void setNoMore(boolean noMore) {
         isLoadingData = false;
         isNoMore = noMore;
+        // 首先判断是否有  FootView ， 没有的话， 用默认的 FootView 并且设置   属性
         if (mFootView instanceof LoadingMoreFooter) {
             ((LoadingMoreFooter) mFootView).setState(isNoMore ? LoadingMoreFooter.STATE_NOMORE : LoadingMoreFooter.STATE_COMPLETE);
         } else {
@@ -171,7 +174,7 @@ public class XRecyclerView extends RecyclerView {
      */
     public void refresh() {
         if (pullRefreshEnabled && mLoadingListener != null) {
-            mRefreshHeader.setState(ArrowRefreshHeader.STATE_REFRESHING);
+            mRefreshHeader.setState(BaseRefreshHeader.RefreshState.REFRESHING);
             mLoadingListener.onRefresh();
         }
     }
@@ -182,6 +185,7 @@ public class XRecyclerView extends RecyclerView {
         refreshComplete();
     }
 
+    //刷新成功，  默认  有更多
     public void refreshComplete() {
         mRefreshHeader.refreshComplete();
         setNoMore(false);
@@ -204,25 +208,8 @@ public class XRecyclerView extends RecyclerView {
         }
     }
 
-    public void setRefreshProgressStyle(int style) {
-        mRefreshProgressStyle = style;
-        if (mRefreshHeader != null) {
-            mRefreshHeader.setProgressStyle(style);
-        }
-    }
 
-    public void setLoadingMoreProgressStyle(int style) {
-        mLoadingMoreProgressStyle = style;
-        if (mFootView instanceof LoadingMoreFooter) {
-            ((LoadingMoreFooter) mFootView).setProgressStyle(style);
-        }
-    }
 
-    public void setArrowImageView(int resId) {
-        if (mRefreshHeader != null) {
-            mRefreshHeader.setArrowImageView(resId);
-        }
-    }
 
     public void setEmptyView(View emptyView) {
         this.mEmptyView = emptyView;
@@ -233,6 +220,7 @@ public class XRecyclerView extends RecyclerView {
         return mEmptyView;
     }
 
+    // 对用户的 Adapter 进行封装， 为一个新的 Adapter 传递给  RecycleView
     @Override
     public void setAdapter(Adapter adapter) {
         mWrapAdapter = new WrapAdapter(adapter);
@@ -241,7 +229,7 @@ public class XRecyclerView extends RecyclerView {
         mDataObserver.onChanged();
     }
 
-    //避免用户自己调用getAdapter() 引起的ClassCastException
+    //避免用户自己调用getAdapter() 引起的ClassCastException,   获取用户自己传递进来的  Adapter
     @Override
     public Adapter getAdapter() {
         if (mWrapAdapter != null)
@@ -268,6 +256,7 @@ public class XRecyclerView extends RecyclerView {
         }
     }
 
+
     @Override
     public void onScrollStateChanged(int state) {
         super.onScrollStateChanged(state);
@@ -284,7 +273,10 @@ public class XRecyclerView extends RecyclerView {
                 lastVisibleItemPosition = ((LinearLayoutManager) layoutManager).findLastVisibleItemPosition();
             }
             if (layoutManager.getChildCount() > 0
-                    && lastVisibleItemPosition >= layoutManager.getItemCount() - 1 && layoutManager.getItemCount() > layoutManager.getChildCount() && !isNoMore && mRefreshHeader.getState() < ArrowRefreshHeader.STATE_REFRESHING) {
+                    && lastVisibleItemPosition >= layoutManager.getItemCount() - 1
+                    && layoutManager.getItemCount() > layoutManager.getChildCount()
+                    && !isNoMore
+                    && mRefreshHeader.getState() < BaseRefreshHeader.RefreshState.REFRESHING) {
                 isLoadingData = true;
                 if (mFootView instanceof LoadingMoreFooter) {
                     ((LoadingMoreFooter) mFootView).setState(LoadingMoreFooter.STATE_LOADING);
@@ -313,7 +305,7 @@ public class XRecyclerView extends RecyclerView {
                 mLastY = ev.getRawY();
                 if (isOnTop() && pullRefreshEnabled && appbarState == AppBarStateChangeListener.State.EXPANDED) {
                     mRefreshHeader.onMove(deltaY / DRAG_RATE);
-                    if (mRefreshHeader.getVisibleHeight() > 0 && mRefreshHeader.getState() < ArrowRefreshHeader.STATE_REFRESHING) {
+                    if (mRefreshHeader.getVisibleHeight() > 0 && mRefreshHeader.getState() < BaseRefreshHeader.RefreshState.REFRESHING) {
                         return false;
                     }
                 }
@@ -350,6 +342,8 @@ public class XRecyclerView extends RecyclerView {
         }
     }
 
+
+    // 实现 RecycleView 的   EmptyView
     private class DataObserver extends RecyclerView.AdapterDataObserver {
         @Override
         public void onChanged() {
@@ -406,12 +400,14 @@ public class XRecyclerView extends RecyclerView {
 
     private class WrapAdapter extends RecyclerView.Adapter<ViewHolder> {
 
+        // 外层
         private RecyclerView.Adapter adapter;
 
         public WrapAdapter(RecyclerView.Adapter adapter) {
             this.adapter = adapter;
         }
 
+        // 获取原有的 Adapter ，就是用户自己传递进来的Adapter
         public RecyclerView.Adapter getOriginalAdapter() {
             return this.adapter;
         }
@@ -611,7 +607,7 @@ public class XRecyclerView extends RecyclerView {
 
 
     /**
-     *  刷新监听
+     * 刷新监听
      */
     public interface LoadingListener {
 
@@ -687,14 +683,14 @@ public class XRecyclerView extends RecyclerView {
         }
     }
 
+
     private ScrollAlphaChangeListener scrollAlphaChangeListener;
 
-    public void setScrollAlphaChangeListener(
-            ScrollAlphaChangeListener scrollAlphaChangeListener
-    ) {
+    public void setScrollAlphaChangeListener(ScrollAlphaChangeListener scrollAlphaChangeListener) {
         this.scrollAlphaChangeListener = scrollAlphaChangeListener;
     }
 
+    //上滑， 渐变效果实现 通过 onScrolled()
     public interface ScrollAlphaChangeListener {
         void onAlphaChange(int alpha);
 

@@ -19,14 +19,14 @@ import com.jcodecraeer.xrecyclerview.progressindicator.AVLoadingIndicatorView;
 
 import java.util.Date;
 
-public class ArrowRefreshHeader extends LinearLayout implements BaseRefreshHeader {
+public class ArrowRefreshHeader extends  BaseRefreshHeader {
 
     //获取布局最外层的  Linearlayout ， 并不是RelativeLayout对外部布局高度进行修改。
     private LinearLayout mContainer;
     private ImageView mArrowImageView;
     private SimpleViewSwitcher mProgressBar;
     private TextView mStatusTextView;
-    private int mState = STATE_NORMAL;
+    private int mState = RefreshState.NORMAL;
 
     private TextView mHeaderTimeView;
 
@@ -104,16 +104,16 @@ public class ArrowRefreshHeader extends LinearLayout implements BaseRefreshHeade
     public void setArrowImageView(int resid) {
         mArrowImageView.setImageResource(resid);
     }
-
+    @Override
     public void setState(int state) {
         if (state == mState) return;
 
-        if (state == STATE_REFRESHING) {    // 显示进度
+        if (state ==RefreshState.REFRESHING) {    // 显示进度
             mArrowImageView.clearAnimation();
             mArrowImageView.setVisibility(View.INVISIBLE);
             mProgressBar.setVisibility(View.VISIBLE);
             smoothScrollTo(mMeasuredHeight);
-        } else if (state == STATE_DONE) {
+        } else if (state == RefreshState.DONE) {
             mArrowImageView.setVisibility(View.INVISIBLE);
             mProgressBar.setVisibility(View.INVISIBLE);
         } else {    // 显示箭头图片
@@ -122,26 +122,26 @@ public class ArrowRefreshHeader extends LinearLayout implements BaseRefreshHeade
         }
 
         switch (state) {
-            case STATE_NORMAL:
-                if (mState == STATE_RELEASE_TO_REFRESH) {
+            case RefreshState.NORMAL:
+                if (mState == RefreshState.RELEASE_TO_REFRESH) {
                     mArrowImageView.startAnimation(mRotateDownAnim);
                 }
-                if (mState == STATE_REFRESHING) {
+                if (mState == RefreshState.REFRESHING) {
                     mArrowImageView.clearAnimation();
                 }
                 mStatusTextView.setText(R.string.listview_header_hint_normal);
                 break;
-            case STATE_RELEASE_TO_REFRESH:
-                if (mState != STATE_RELEASE_TO_REFRESH) {
+            case RefreshState.RELEASE_TO_REFRESH:
+                if (mState != RefreshState.RELEASE_TO_REFRESH) {
                     mArrowImageView.clearAnimation();
                     mArrowImageView.startAnimation(mRotateUpAnim);
                     mStatusTextView.setText(R.string.listview_header_hint_release);
                 }
                 break;
-            case STATE_REFRESHING:
+            case RefreshState.REFRESHING:
                 mStatusTextView.setText(R.string.refreshing);
                 break;
-            case STATE_DONE:
+            case RefreshState.DONE:
                 mStatusTextView.setText(R.string.refresh_done);
                 break;
             default:
@@ -150,6 +150,7 @@ public class ArrowRefreshHeader extends LinearLayout implements BaseRefreshHeade
         mState = state;
     }
 
+    @Override
     public int getState() {
         return mState;
     }
@@ -157,7 +158,7 @@ public class ArrowRefreshHeader extends LinearLayout implements BaseRefreshHeade
     @Override
     public void refreshComplete() {
         mHeaderTimeView.setText(friendlyTime(new Date()));
-        setState(STATE_DONE);
+        setState(RefreshState.DONE);
         new Handler().postDelayed(new Runnable() {
             public void run() {
                 reset();
@@ -172,6 +173,7 @@ public class ArrowRefreshHeader extends LinearLayout implements BaseRefreshHeade
         mContainer.setLayoutParams(lp);
     }
 
+    @Override
     public int getVisibleHeight() {
         LayoutParams lp = (LayoutParams) mContainer.getLayoutParams();
         return lp.height;
@@ -181,11 +183,11 @@ public class ArrowRefreshHeader extends LinearLayout implements BaseRefreshHeade
     public void onMove(float delta) {
         if (getVisibleHeight() > 0 || delta > 0) {
             setVisibleHeight((int) delta + getVisibleHeight());
-            if (mState <= STATE_RELEASE_TO_REFRESH) { // 未处于刷新状态，更新箭头
+            if (mState <= RefreshState.RELEASE_TO_REFRESH) { // 未处于刷新状态，更新箭头
                 if (getVisibleHeight() > mMeasuredHeight) {
-                    setState(STATE_RELEASE_TO_REFRESH);
+                    setState(RefreshState.RELEASE_TO_REFRESH);
                 } else {
-                    setState(STATE_NORMAL);
+                    setState(RefreshState.NORMAL);
                 }
             }
         }
@@ -198,19 +200,19 @@ public class ArrowRefreshHeader extends LinearLayout implements BaseRefreshHeade
         if (height == 0) // not visible.
             isOnRefresh = false;
 
-        if (getVisibleHeight() > mMeasuredHeight && mState < STATE_REFRESHING) {
-            setState(STATE_REFRESHING);
+        if (getVisibleHeight() > mMeasuredHeight && mState < RefreshState.REFRESHING) {
+            setState(RefreshState.REFRESHING);
             isOnRefresh = true;
         }
         // refreshing and header isn't shown fully. do nothing.
-        if (mState == STATE_REFRESHING && height <= mMeasuredHeight) {
+        if (mState == RefreshState.REFRESHING && height <= mMeasuredHeight) {
             //return;
         }
-        if (mState != STATE_REFRESHING) {
+        if (mState != RefreshState.REFRESHING) {
             smoothScrollTo(0);
         }
 
-        if (mState == STATE_REFRESHING) {
+        if (mState == RefreshState.REFRESHING) {
             int destHeight = mMeasuredHeight;
             smoothScrollTo(destHeight);
         }
@@ -222,7 +224,7 @@ public class ArrowRefreshHeader extends LinearLayout implements BaseRefreshHeade
         smoothScrollTo(0);
         new Handler().postDelayed(new Runnable() {
             public void run() {
-                setState(STATE_NORMAL);
+                setState(RefreshState.NORMAL);
             }
         }, 500);
     }

@@ -78,7 +78,8 @@ import com.jcodecraeer.xrecyclerview.progressindicator.indicator.TriangleSkewSpi
 
 
 /**
- *  使用 indicator  来绘制一个View
+ * 使用 indicator  来绘制一个View  包装  indicator   用于 刷新 左侧的动画
+ *
  * @author msh
  * @time 2018/6/4 16:48
  */
