@@ -13,6 +13,7 @@ import java.util.ArrayList;
  */
 public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
     public ArrayList<String> datas = null;
+
     public MyAdapter(ArrayList<String> datas) {
         this.datas = datas;
     }

@@ -16,10 +16,28 @@
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
             />
 
+
+
+<FrameLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
     <com.jcodecraeer.xrecyclerview.XRecyclerView
-            android:id="@+id/recyclerview"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            />
+        android:id="@+id/recyclerview"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:id="@+id/empty"
+        android:visibility="gone"
+        android:layout_height="match_parent"
+        android:background="#6c0250"
+        android:gravity="center"
+        android:text="this have no data"
+        android:textColor="#ffffff"
+        android:textSize="30dp" />
+
+</FrameLayout>
 
 </LinearLayout>

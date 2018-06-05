@@ -10,7 +10,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.jcodecraeer.xrecyclerview.ProgressStyle;
 import com.jcodecraeer.xrecyclerview.XRecyclerView;
 
 import java.util.ArrayList;
@@ -21,6 +20,7 @@ public class LinearActivity extends AppCompatActivity {
     private ArrayList<String> listData;
     private int refreshTime = 0;
     private int times = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,22 +30,20 @@ public class LinearActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
 
-
-
-        mRecyclerView = (XRecyclerView)this.findViewById(R.id.recyclerview);
+        mRecyclerView = (XRecyclerView) this.findViewById(R.id.recyclerview);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
         mRecyclerView.setLayoutManager(layoutManager);
 
         //设置两种不同的动画效果 上拉和下拉的动画效果
-        mRecyclerView.setRefreshProgressStyle(ProgressStyle.BallSpinFadeLoader);
-        mRecyclerView.setLoadingMoreProgressStyle(ProgressStyle.BallRotate);
+//        mRecyclerView.setRefreshProgressStyle(ProgressStyle.BallSpinFadeLoader);
+//        mRecyclerView.setLoadingMoreProgressStyle(ProgressStyle.BallRotate);
 
 
         //设置下拉的 图标样式
-        mRecyclerView.setArrowImageView(R.drawable.iconfont_downgrey);
+//        mRecyclerView.setArrowImageView(R.drawable.iconfont_downgrey);
         /*设置RecycleView的头布局文件*/
-        View header = LayoutInflater.from(this).inflate(R.layout.recyclerview_header, (ViewGroup)findViewById(android.R.id.content),false);
+        View header = LayoutInflater.from(this).inflate(R.layout.recyclerview_header, (ViewGroup) findViewById(android.R.id.content), false);
         mRecyclerView.addHeaderView(header);
         header.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -53,6 +51,17 @@ public class LinearActivity extends AppCompatActivity {
                 Toast.makeText(LinearActivity.this, "I am  header~", Toast.LENGTH_SHORT).show();
             }
         });
+        View header2 = LayoutInflater.from(this).inflate(R.layout.recyclerview_header, (ViewGroup) findViewById(android.R.id.content), false);
+        mRecyclerView.addHeaderView(header2);
+        header2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(LinearActivity.this, "222222I am  header~", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        View empty = findViewById(R.id.empty);
+        mRecyclerView.setEmptyView(empty);
 
         mRecyclerView.getDefaultFootView().setLoadingHint("自定义加载中提示");
         mRecyclerView.getDefaultFootView().setNoMoreHint("自定义加载完毕提示");
@@ -81,12 +90,12 @@ public class LinearActivity extends AppCompatActivity {
 
             @Override
             public void onRefresh() {
-                refreshTime ++;
+                refreshTime++;
                 times = 0;
-                new Handler().postDelayed(new Runnable(){
+                new Handler().postDelayed(new Runnable() {
                     public void run() {
                         listData.clear();
-                        for(int i = 0; i < 15 ;i++){
+                        for (int i = 0; i < 15; i++) {
                             listData.add("item" + i + "after " + refreshTime + " times of refresh");
                         }
                         mAdapter.notifyDataSetChanged();
@@ -98,11 +107,11 @@ public class LinearActivity extends AppCompatActivity {
 
             @Override
             public void onLoadMore() {
-                if(times < 2){
-                    new Handler().postDelayed(new Runnable(){
+                if (times < 2) {
+                    new Handler().postDelayed(new Runnable() {
                         public void run() {
-                            for(int i = 0; i < 15 ;i++){
-                                listData.add("item" + (1 + listData.size() ) );
+                            for (int i = 0; i < 15; i++) {
+                                listData.add("item" + (1 + listData.size()));
                             }
                             mRecyclerView.loadMoreComplete();
                             mAdapter.notifyDataSetChanged();
@@ -111,19 +120,19 @@ public class LinearActivity extends AppCompatActivity {
                 } else {
                     new Handler().postDelayed(new Runnable() {
                         public void run() {
-                            for(int i = 0; i < 9 ;i++){
-                                listData.add("item" + (1 + listData.size() ) );
+                            for (int i = 0; i < 9; i++) {
+                                listData.add("item" + (1 + listData.size()));
                             }
                             mRecyclerView.setNoMore(true);
                             mAdapter.notifyDataSetChanged();
                         }
                     }, 1000);
                 }
-                times ++;
+                times++;
             }
         });
 
-        listData = new  ArrayList<String>();
+        listData = new ArrayList<String>();
         mAdapter = new MyAdapter(listData);
         mRecyclerView.setAdapter(mAdapter);
         //进来之后默认加载最新
